@@ -19,6 +19,7 @@ import urllib
 from collections import Counter, OrderedDict, namedtuple
 from collections.abc import Iterable
 from contextlib import contextmanager
+from shutil import copytree
 
 import aiofiles
 import click
@@ -26,7 +27,6 @@ import markupsafe
 import mergedeep
 import yaml
 
-from .shutil_backport import copytree
 from .sqlite import sqlite3, supports_table_xinfo
 
 if typing.TYPE_CHECKING:
@@ -957,7 +957,7 @@ def to_css_class(s):
     """
     if css_class_re.match(s):
         return s
-    md5_suffix = md5_not_usedforsecurity(s)[:6]
+    md5_suffix = hashlib.md5(s.encode("utf8"), usedforsecurity=False).hexdigest()[:6]
     # Strip leading _, -
     s = s.lstrip("_").lstrip("-")
     # Replace any whitespace with hyphens
@@ -1755,14 +1755,6 @@ def redact_keys(original: dict, key_patterns: Iterable) -> dict:
             return data
 
     return redact(original)
-
-
-def md5_not_usedforsecurity(s):
-    try:
-        return hashlib.md5(s.encode("utf8"), usedforsecurity=False).hexdigest()
-    except TypeError:
-        # For Python 3.8 which does not support usedforsecurity=False
-        return hashlib.md5(s.encode("utf8")).hexdigest()
 
 
 _etag_cache = {}

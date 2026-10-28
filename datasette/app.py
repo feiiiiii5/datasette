@@ -2212,7 +2212,7 @@ ORDER BY allowed.parent, allowed.child
 
         # Log every check (including cache hits) for the debug page,
         # dependencies before the actions that required them
-        when = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        when = datetime.datetime.now(datetime.UTC).isoformat()
         for name in reversed(expanded):
             self._permission_checks.append(
                 PermissionCheck(
@@ -2885,6 +2885,10 @@ ORDER BY allowed.parent, allowed.child
         add_route(
             wrap_view(PatternPortfolioView, self),
             r"/-/patterns$",
+        )
+        add_route(
+            wrap_view(PatternPortfolioView, self),
+            r"/-/patterns/(?P<pattern>menus)$",
         )
         add_route(
             AutocompleteDebugView.as_view(self),
