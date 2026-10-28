@@ -409,6 +409,29 @@ def test_paginate_table_with_empty_string_primary_key():
         assert None is last["next_url"]
 
 
+def test_view_ignores_an_empty_next_cursor():
+    # Views paginate by integer offset, not by a keyset cursor, so the
+    # first page arrives as ?_next= (empty). Feeding that to int() raises
+    # ValueError and returns 500; an empty cursor must mean "first page".
+    with make_app_client(
+        memory=True,
+        extra_databases={
+            "view_db": (
+                "CREATE TABLE items (id TEXT PRIMARY KEY);"
+                "INSERT INTO items (id) VALUES ('a'), ('b'), ('c');"
+                "CREATE VIEW v AS SELECT id FROM items;"
+            )
+        },
+    ) as client:
+        response = client.get("/view_db/v.json?_size=1&_sort=id&_next=")
+        assert response.status == 200
+        assert [row["id"] for row in response.json["rows"]] == ["a"]
+
+        response = client.get("/view_db/v.json?_size=1&_sort=id&_next=1")
+        assert response.status == 200
+        assert [row["id"] for row in response.json["rows"]] == ["b"]
+
+
 @pytest.mark.asyncio
 async def test_paginate_compound_keys(ds_client):
     fetched = []

@@ -2142,6 +2142,11 @@ async def table_view_data(
     # Handle pagination driven by ?_next=
     _next = _next if _next is not None else request.args.get("_next")
 
+    # A view paginates by integer offset, so the first page arrives as an empty
+    # ?_next=; a table's empty _next is a real cursor for an empty primary key.
+    if is_view and _next == "":
+        _next = None
+
     offset = ""
     if _next is not None:
         sort_value = None
