@@ -464,3 +464,24 @@ async def test_jump_url_descriptor_errors(ds_for_jump):
 async def test_tables_endpoint_removed(ds_for_jump):
     response = await ds_for_jump.client.get("/-/tables.json")
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_jump_filters_by_type(ds_for_jump):
+    response = await ds_for_jump.client.get(
+        "/-/jump.json?q=content&type=table&type=database",
+        actor={"id": "user"},
+    )
+    assert response.status_code == 200
+    assert {match["type"] for match in response.json()["matches"]} == {
+        "database",
+        "table",
+    }
+
+    response = await ds_for_jump.client.get(
+        "/-/jump.json?q=content&type=query", actor={"id": "user"}
+    )
+    assert response.status_code == 200
+    matches = response.json()["matches"]
+    assert matches
+    assert {match["type"] for match in matches} == {"query"}
