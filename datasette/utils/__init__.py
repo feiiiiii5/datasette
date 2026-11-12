@@ -535,7 +535,9 @@ def path_with_added_args(request, args, path=None):
         args = args.items()
     args_to_remove = {k for k, v in args if v is None}
     current = []
-    for key, value in urllib.parse.parse_qsl(request.query_string):
+    for key, value in urllib.parse.parse_qsl(
+        request.query_string, keep_blank_values=True
+    ):
         if key not in args_to_remove:
             current.append((key, value))
     current.extend([(key, value) for key, value in args if value is not None])
@@ -565,7 +567,7 @@ def path_with_removed_args(request, args, path=None):
         def should_remove(key, value):
             return args.get(key) == value
 
-    for key, value in urllib.parse.parse_qsl(query_string):
+    for key, value in urllib.parse.parse_qsl(query_string, keep_blank_values=True):
         if not should_remove(key, value):
             current.append((key, value))
     query_string = urllib.parse.urlencode(current)
@@ -580,7 +582,9 @@ def path_with_replaced_args(request, args, path=None):
         args = args.items()
     keys_to_replace = {p[0] for p in args}
     current = []
-    for key, value in urllib.parse.parse_qsl(request.query_string):
+    for key, value in urllib.parse.parse_qsl(
+        request.query_string, keep_blank_values=True
+    ):
         if key not in keys_to_replace:
             current.append((key, value))
     current.extend([p for p in args if p[1] is not None])
@@ -953,6 +957,8 @@ def filters_should_redirect(special_args):
     for key in ("_filter_column", "_filter_op", "_filter_value"):
         if key in special_args:
             redirect_params.append((key, None))
+    if special_args.get("_search") == "":
+        redirect_params.append(("_search", None))
     # Now handle _filter_column_1=name&_filter_op_1=contains&_filter_value_1=hello
     column_keys = [k for k in special_args if filter_column_re.match(k)]
     for column_key in column_keys:

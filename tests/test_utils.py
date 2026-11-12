@@ -60,6 +60,7 @@ def test_urlsafe_components(path, expected):
             (("_facet", "planet_int"),),
             "/?_facet=state&_facet=city&_facet=planet_int",
         ),
+        ("/foo?bar=", [("baz", 2)], "/foo?bar=&baz=2"),
     ],
 )
 def test_path_with_added_args(path, added_args, expected):
@@ -74,6 +75,7 @@ def test_path_with_added_args(path, added_args, expected):
         ("/foo?bar=1", {"bar"}, "/foo"),
         ("/foo?bar=1&baz=2", {"bar"}, "/foo?baz=2"),
         ("/foo?bar=1&bar=2&bar=3", {"bar": "2"}, "/foo?bar=1&bar=3"),
+        ("/foo?bar=&baz=2", {"baz"}, "/foo?bar="),
     ],
 )
 def test_path_with_removed_args(path, args, expected):
@@ -91,6 +93,12 @@ def test_path_with_removed_args(path, args, expected):
     [
         ("/foo?bar=1", {"bar": 2}, "/foo?bar=2"),
         ("/foo?bar=1&baz=2", {"bar": None}, "/foo?baz=2"),
+        ("/foo?bar=&baz=2", {"baz": 3}, "/foo?bar=&baz=3"),
+        (
+            "/foo?content__exact=&_sort=id",
+            {"_sort": "content"},
+            "/foo?content__exact=&_sort=content",
+        ),
     ],
 )
 def test_path_with_replaced_args(path, args, expected):
